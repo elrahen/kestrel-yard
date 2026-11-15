@@ -3,6 +3,7 @@
 // the crosshair gap tracks the player's live spread.
 
 import { WEAPONS, BUY_ORDER, ARMOR_PRICE } from './weapons.js';
+import { sfx } from './audio.js';
 
 export class HUD {
   constructor() {
@@ -108,6 +109,7 @@ export class HUD {
   }
 
   // Buy menu: rebuilt each time it opens so prices and ownership are current.
+  // Rows are clickable (tap on touch, click on desktop) — same as keys 1-7.
   openBuy(player) {
     this.buyOpen = true;
     const list = this.el['buy-list'];
@@ -118,11 +120,19 @@ export class HUD {
       const row = document.createElement('div');
       row.className = 'buy-row' + (owned ? ' owned' : '') + (player.money < def.price ? ' poor' : '');
       row.innerHTML = `<span class="buy-key">${i + 1}</span><span class="buy-name">${def.name}</span><span class="buy-price">${def.price === 0 ? 'FREE' : '$' + def.price}</span><span class="buy-state">${owned ? 'OWNED' : ''}</span>`;
+      row.addEventListener('click', () => {
+        if (player.buy(id)) sfx.buy(); else sfx.denied();
+        this.openBuy(player);
+      });
       list.appendChild(row);
     });
     const armor = document.createElement('div');
     armor.className = 'buy-row' + (player.armor >= 100 ? ' owned' : '') + (player.money < ARMOR_PRICE ? ' poor' : '');
     armor.innerHTML = `<span class="buy-key">7</span><span class="buy-name">Kevlar Vest</span><span class="buy-price">$${ARMOR_PRICE}</span><span class="buy-state">${player.armor >= 100 ? 'OWNED' : ''}</span>`;
+    armor.addEventListener('click', () => {
+      if (player.buyArmor()) sfx.buy(); else sfx.denied();
+      this.openBuy(player);
+    });
     list.appendChild(armor);
     this.el['buy-menu'].style.display = 'block';
   }

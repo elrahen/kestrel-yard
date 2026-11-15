@@ -12,6 +12,7 @@ import { Effects } from './effects.js';
 import { WEAPONS, BUY_ORDER, ARMOR_PRICE, damageAt } from './weapons.js';
 import { ensureAudio, sfx } from './audio.js';
 import { PALETTE } from './palette.js';
+import { initTouch, IS_TOUCH } from './touch.js';
 
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo') === '1';
@@ -165,9 +166,18 @@ function updateGrenades(dt) {
 }
 
 // ---- input ----
-const input = { forward: false, back: false, left: false, right: false, fire: false };
+const input = { forward: false, back: false, left: false, right: false, fire: false, joyX: 0, joyY: 0 };
 let pointerLocked = false;
 let paused = false;
+
+// Touch devices get the joystick / aim-drag / buttons instead of pointer lock.
+if (IS_TOUCH) {
+  initTouch({
+    input, player, hud, game, spawnGrenade,
+    now: () => nowSec,
+    canvas: renderer.domElement,
+  });
+}
 
 addEventListener('keydown', (e) => {
   if (e.repeat) return;
@@ -219,6 +229,7 @@ addEventListener('mousedown', (e) => {
   if (e.button !== 0) return;
   ensureAudio();
   if (DEMO) return;
+  if (IS_TOUCH) return; // touch uses the on-screen FIRE button, never pointer lock
   if (!pointerLocked) { renderer.domElement.requestPointerLock(); return; }
   input.fire = true;
 });
@@ -285,8 +296,9 @@ function autopilotStep(dt, now) {
 // ---- start / menu ----
 function startPlaying() {
   hud.showMenu(false);
+  document.body.classList.add('playing');
   game.startMatch();
-  if (!DEMO) renderer.domElement.requestPointerLock();
+  if (!DEMO && !IS_TOUCH) renderer.domElement.requestPointerLock();
   if (game.phase === PHASE.BUY) hud.openBuy(player);
 }
 document.getElementById('play-btn').addEventListener('click', () => { ensureAudio(); startPlaying(); });
@@ -351,6 +363,7 @@ function frame() {
 // auto-start in demo mode (no pointer lock, no click needed)
 if (DEMO) {
   hud.showMenu(false);
+  document.body.classList.add('playing');
   game.startMatch();
   game.startLive();
   document.getElementById('demo-tag').style.display = 'block';

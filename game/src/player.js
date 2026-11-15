@@ -123,9 +123,15 @@ export class Player {
     if (input.back) wish.sub(fwd);
     if (input.right) wish.add(right);
     if (input.left) wish.sub(right);
+    // Touch joystick: analog — push up is forward, magnitude sets speed.
+    if (input.joyX || input.joyY) {
+      wish.addScaledVector(fwd, -input.joyY);
+      wish.addScaledVector(right, input.joyX);
+    }
     this.moving = wish.lengthSq() > 0;
     if (this.moving) {
-      wish.normalize().multiplyScalar(speed);
+      const mag = Math.min(1, wish.length());
+      wish.normalize().multiplyScalar(speed * mag);
       this.vel.x += (wish.x - this.vel.x) * Math.min(1, ACCEL * dt / speed * 4);
       this.vel.z += (wish.z - this.vel.z) * Math.min(1, ACCEL * dt / speed * 4);
     } else {

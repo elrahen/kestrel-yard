@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Kestrel Yard — a three.js tactical FPS</title>
 <link rel="icon" href="data:,">
 <style>
@@ -78,10 +78,11 @@
   #banner-sub { position: fixed; top: calc(22% + 56px); left: 0; right: 0; text-align: center; font-size: 16px; color: var(--muted); opacity: 0; transition: opacity .3s; }
   #banner.show, #banner-sub.show { opacity: 1; }
 
-  #buy-menu { display: none; position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 460px; background: rgba(20, 22, 26, .94); border: 1px solid var(--hairline); border-radius: var(--radius-panel); padding: 18px 20px; pointer-events: auto; }
+  #buy-menu { display: none; position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(460px, 92vw); max-height: 86vh; overflow-y: auto; background: rgba(20, 22, 26, .94); border: 1px solid var(--hairline); border-radius: var(--radius-panel); padding: 18px 20px; pointer-events: auto; }
   #buy-menu h2 { margin: 0 0 4px; font-size: 18px; letter-spacing: .08em; }
   #buy-menu p { margin: 0 0 12px; color: var(--muted); font-size: 12px; }
-  .buy-row { display: flex; gap: 10px; align-items: baseline; padding: 8px 6px; border-top: 1px solid var(--hairline); font-family: var(--font-readout); font-size: 14px; }
+  .buy-row { display: flex; gap: 10px; align-items: baseline; padding: 8px 6px; border-top: 1px solid var(--hairline); font-family: var(--font-readout); font-size: 14px; cursor: pointer; }
+  .buy-row:active { background: rgba(240, 168, 48, .12); }
   .buy-row.poor { opacity: .45; }
   .buy-key { background: var(--hairline); border-radius: 3px; padding: 1px 7px; font-size: 12px; }
   .buy-name { flex: 1; }
@@ -109,6 +110,47 @@
 
   #demo-tag { display: none; position: fixed; left: 16px; top: 16px; font-family: var(--font-readout); font-size: 11px; color: var(--accent); letter-spacing: .12em; }
   #errlog { display: none; }
+
+  /* ---- touch controls: hidden unless the device reports touch ---- */
+  #touch-ui { display: none; pointer-events: none; }
+  #game canvas { touch-action: none; }
+  body.touch.playing #touch-ui { display: block; }
+  #stick { position: fixed; left: calc(20px + env(safe-area-inset-left, 0px)); bottom: calc(20px + env(safe-area-inset-bottom, 0px)); width: 120px; height: 120px; border: 2px solid rgba(233, 230, 223, .35); border-radius: 50%; background: rgba(20, 22, 26, .35); touch-action: none; pointer-events: auto; }
+  #stick-knob { position: absolute; left: 50%; top: 50%; width: 52px; height: 52px; border-radius: 50%; background: rgba(233, 230, 223, .55); transform: translate(-50%, -50%); }
+  #touch-btns { position: fixed; right: calc(16px + env(safe-area-inset-right, 0px)); bottom: calc(20px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; align-items: center; gap: 10px; pointer-events: auto; }
+  .tbtn { font: inherit; font-family: var(--font-readout); font-size: 11px; font-weight: 700; letter-spacing: .06em; color: var(--ink); background: rgba(20, 22, 26, .55); border: 2px solid rgba(233, 230, 223, .4); border-radius: 50%; width: 56px; height: 56px; cursor: pointer; touch-action: none; user-select: none; -webkit-user-select: none; }
+  .tbtn.active { background: var(--accent); color: #14161a; border-color: var(--accent); }
+  #btn-fire { width: 88px; height: 88px; font-size: 14px; background: rgba(240, 168, 48, .85); border-color: var(--accent); color: #14161a; }
+  #btn-fire:active { filter: brightness(1.15); }
+  /* keep the desktop HUD clear of the touch controls: health stays above
+     the stick; ammo and money move to the free top-left corner, because
+     the button column occupies the whole right side */
+  body.touch #health-block { left: 16px; bottom: 168px; }
+  body.touch #ammo { left: 16px; right: auto; top: calc(72px + env(safe-area-inset-top, 0px)); bottom: auto; text-align: left; }
+  body.touch #money { left: 16px; right: auto; top: calc(142px + env(safe-area-inset-top, 0px)); bottom: auto; }
+  body.touch #hint { display: none; }
+
+  /* ---- small screens (phones in portrait and short landscape) ---- */
+  @media (max-width: 700px) {
+    #topbar { gap: 8px; padding: 6px 10px; top: calc(10px + env(safe-area-inset-top, 0px)); max-width: 96vw; }
+    #topbar .team { font-size: 14px; }
+    #timer { font-size: 17px; min-width: 48px; }
+    #round-label { font-size: 10px; }
+    .alive { font-size: 9px; }
+    #spike-status { top: 58px; font-size: 11px; }
+    #health-num { font-size: 30px; }
+    #ammo-mag { font-size: 38px; }
+    #ammo-res { font-size: 15px; }
+    #money { font-size: 16px; }
+    #killfeed { right: 12px; top: 56px; font-size: 11px; }
+    #banner { font-size: 28px; }
+    #banner-sub { font-size: 13px; top: calc(22% + 40px); }
+    #menu .panel { max-width: 92vw; padding: 22px 20px; }
+    #menu h1 { font-size: 28px; }
+    #menu ul { font-size: 13px; }
+    #play-btn { font-size: 16px; padding: 12px 22px; }
+    #end-title { font-size: 28px; }
+  }
 </style>
 <script type="importmap">
 { "imports": { "three": "./vendor/three/three.module.min.js" } }
@@ -143,6 +185,16 @@
   <div id="buy-menu"><h2>BUY MENU</h2><p>Press B to close. Keys 1–6 buy a weapon, 7 buys Kevlar.</p><div id="buy-list"></div></div>
   <div id="plant-bar"><div id="plant-fill"></div></div>
   <div id="hint">Click to lock the mouse. WASD move · C crouch · R reload · B buy · G grenade</div>
+  <div id="touch-ui">
+    <div id="stick"><div id="stick-knob"></div></div>
+    <div id="touch-btns">
+      <button class="tbtn" id="btn-buy" type="button">BUY</button>
+      <button class="tbtn" id="btn-grenade" type="button">GRND</button>
+      <button class="tbtn" id="btn-crouch" type="button">CRCH</button>
+      <button class="tbtn" id="btn-reload" type="button">RLD</button>
+      <button class="tbtn" id="btn-fire" type="button">FIRE</button>
+    </div>
+  </div>
 </div>
 <div id="menu"><div class="panel">
   <h1>KESTREL <span>YARD</span></h1>
